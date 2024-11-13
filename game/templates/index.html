@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tap Game</title>
+    <style>
+        body {
+            background: var(--Blue, #018ACE);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .main {
+            max-width: 100vw;
+            max-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tap-area {
+            display: flex;
+            flex-direction: column;
+            width: 260px;
+            height: 80px;
+            padding: 20px;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0px 0px 30px 30px;
+            background: rgba(1, 91, 135, 0.18);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+        }
+
+        .tap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #icon-score {
+            width: 32px;
+            height: 39px;
+        }
+
+        .taps-text {
+            color: #FFF;
+            font-family: "Arial Rounded MT Bold";
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.5;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .counter {
+            color: #FFF;
+            font-family: "Arial Rounded MT Bold";
+            font-size: 24px;
+            margin-top: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .additional-images {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: -40px;
+            position: relative;
+        }
+
+        .additional-images img {
+            width: 270px;
+            height: auto;
+            display: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        .additional-images img.active {
+            display: inline-block;
+        }
+
+        .x5-animation {
+            color: gold;
+            font-family: "Arial Rounded MT Bold";
+            font-size: 48px;
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .x5-animation.active {
+            animation: pop 0.5s forwards;
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        .glow-background {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 153, 0.8), transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            opacity: 0;
+            animation: intenseGlow 1s infinite alternate ease-in-out;
+        }
+
+        @keyframes intenseGlow {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.4);
+                opacity: 0.6;
+            }
+        }
+
+        .glow-background.inactive {
+            display: none;
+        }
+
+        .minus10-animation {
+            color: red;
+            font-family: "Arial Rounded MT Bold";
+            font-size: 48px;
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+        }
+
+        .minus10-animation.active {
+            animation: fadeOut 1s forwards;
+        }
+
+        @keyframes fadeOut {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-20px);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-40px);
+                opacity: 0;
+            }
+        }
+
+        .image41-animation {
+            animation: image41Effect 1s infinite alternate;
+        }
+
+        @keyframes image41Effect {
+            0% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% {
+                transform: scale(1.1);
+                filter: brightness(1.5);
+            }
+            100% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+
+        .leaderboard {
+            width: 343px;
+            background: linear-gradient(180deg, #096491 0%, #031E2B 125.45%);
+            padding: 20px;
+            border-radius: 20px;
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            color: white;
+            position: absolute;
+            z-index: 10;
+            transition: max-height 0.5s ease, transform 0.5s ease;
+            overflow: hidden;
+            max-height: 100px;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+            margin: 0px auto;
+            border-radius: 30px 30px 0px 0px;
+        }
+
+        .leaderboard.expanded {
+            max-height: 50vh;
+            bottom: 28%;
+            transform: translate(-50%, 50%);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .leaderboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 10px auto;
+        }
+
+        .trophy-icon {
+            width: 34px;
+            height: 34px;
+            background: #FFD939;
+            position: relative;
+        }
+
+        .title {
+            font-size: 20px;
+            text-transform: uppercase;
+        }
+
+        .worldwide-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 10px;
+            background: rgba(1, 138, 206, 0.18);
+            border-radius: 10px;
+        }
+
+        .stats-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .stats-left span:first-child {
+            font-size: 20px;
+        }
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            max-height: 80px;
+        }
+
+        .leaderboard.expanded .leaderboard-list {
+            max-height: 60vh;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: background 0.3s;
+            font-size: 24px;
+        }
+
+        .leaderboard-entry:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .entry-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rank {
+            width: 20px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .country-flag {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .country-name {
+            font-size: 14px;
+        }
+
+        .entry-score {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .rank-1 .rank {
+            background: #FCDB2C;
+        }
+
+        .rank-2 .rank {
+            background: #7C7C7C;
+        }
+
+        .rank-3 .rank {
+            background: #B16026;
+        }
+
+        .backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 5;
+            display: none;
+        }
+
+        .backdrop.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .tap-area {
+                width: 200px;
+                height: 60px;
+            }
+
+            .taps-text, .counter {
+                font-size: 20px;
+            }
+
+            .x5-animation, .minus10-animation {
+                font-size: 36px;
+            }
+
+            .leaderboard {
+                width: 90%;
+            }
+
+            .leaderboard-entry {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tap-area {
+                width: 160px;
+                height: 50px;
+            }
+
+            .taps-text, .counter {
+                font-size: 16px;
+            }
+
+            .x5-animation, .minus10-animation {
+                font-size: 28px;
+            }
+
+            .leaderboard {
+                width: 95%;
+            }
+
+            .leaderboard-entry {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <div class="tap-area">
+            <div class="tap">
+                <img src="/static/icon-score.svg" alt="icon-score" id="icon-score">
+                <span class="taps-text">TAPS</span>
+            </div>
+            <div class="counter" id="counter">0</div>
+        </div>
+        <div class="additional-images">
+            <div class="glow-background inactive" id="glowEffect"></div>
+
+            <img src="static/image12.png" alt="Additional Image 1" id="image1" class="active">
+            <img src="static/image21.png" alt="Additional Image 2" id="image2">
+            <img src="static/image31.png" alt="Additional Image 3" id="image3">
+            <img src="static/image41.png" alt="Additional Image 4" id="image4">
+            <img src="static/image51.png" alt="Special Image" id="image5">
+            <div class="x5-animation" id="x5Animation">x5</div>
+            <div class="minus10-animation" id="minus10Animation">-10</div>
+        </div>
+
+        <audio id="pop-sound" src="/static/pop1.mp3" preload="auto"></audio>
+        <audio id="pop-sound-2" src="/static/pop2.mp3" preload="auto"></audio>
+        <audio id="lose-sound" src="/static/lose.mp3" preload="auto"></audio>
+
+        <div class="leaderboard">
+            <div class="leaderboard-container">
+                <div class="leaderboard-header">
+                    <div class="header-left">
+                        <div class="trophy-icon">
+                            <img src="static/icon-Leaderpaw.svg" alt="Leaderpaw" class="icon-leaderpaw">
+                        </div>
+                        <div class="title">Leaderpaw</div>
+                    </div>
+                    <div class="header-arrow">▼</div>
+                </div>
+                <div class="leaderboard-list" id="leaderboard-list"></div>
+            </div>
+        </div>
+        <div class="backdrop"></div>
+    </div>
+
+    <script>
+        let currentImageIndex = 0;
+        let lastImageIndex = -1;
+        let tapCount = 0;
+        const images = document.querySelectorAll('.additional-images img');
+        const counter = document.getElementById('counter');
+        const popSound = document.getElementById('pop-sound');
+        const popSound2 = document.getElementById('pop-sound-2');
+        const specialImageIndex = images.length - 1;
+        const x5Animation = document.getElementById('x5Animation');
+        const glowEffect = document.getElementById('glowEffect');
+        const minus10Animation = document.getElementById('minus10Animation');
+        const loseSound = document.getElementById('lose-sound');
+        const lightningEffect = document.getElementById('lightningEffect');
+        
+        let selectedCountryCode = null;
+
+        function showNextImage() {
+            images[currentImageIndex].classList.remove('active');
+            images[currentImageIndex].classList.remove('image41-animation');
+
+            let nextImageIndex;
+            do {
+                if (currentImageIndex < 2) {
+                    nextImageIndex = currentImageIndex + 1;
+                } else {
+                    const randomValue = Math.random();
+                    if (randomValue < 0.05) {
+                        nextImageIndex = specialImageIndex;
+                    } else if (randomValue < 0.25) {
+                        nextImageIndex = Math.random() < 0.5 ? 3 : 4;
+                    } else {
+                        nextImageIndex = 0;
+                    }
+                }
+            } while (nextImageIndex === lastImageIndex);
+
+            lastImageIndex = currentImageIndex;
+            currentImageIndex = nextImageIndex;
+
+            if (currentImageIndex === specialImageIndex) {
+                tapCount += 5;
+                counter.textContent = tapCount;
+                popSound2.play();
+                counter.style.color = "gold";
+
+                x5Animation.classList.add('active');
+                x5Animation.style.opacity = 1;
+                glowEffect.classList.remove('inactive');
+
+                setTimeout(() => {
+                    x5Animation.style.opacity = 0;
+                    x5Animation.classList.remove('active');
+                }, 1000);
+            } else if (currentImageIndex === 3) {
+                images[currentImageIndex].classList.add('active');
+                images[currentImageIndex].classList.add('image41-animation');
+                tapCount -= 10;
+                counter.textContent = tapCount;
+                counter.style.color = "red";
+
+                loseSound.play();
+                minus10Animation.classList.remove('active');
+                void minus10Animation.offsetWidth;
+                minus10Animation.classList.add('active');
+
+                lightningEffect.classList.add('active');
+                setTimeout(() => {
+                    lightningEffect.classList.remove('active');
+                }, 200);
+
+                images[currentImageIndex].classList.add('image41-animation');
+
+                minus10Animation.classList.remove('active');
+                void minus10Animation.offsetWidth;
+                minus10Animation.classList.add('active');
+
+                setTimeout(() => {
+                    x5Animation.style.opacity = 0;
+                    x5Animation.classList.remove('active');
+                }, 1000);
+            } else {
+                counter.style.color = "#FFF";
+                glowEffect.classList.add('inactive');
+            }
+
+            images[currentImageIndex].classList.add('active');
+        }
+
+        function handleTap() {
+            tapCount++;
+            counter.textContent = tapCount;
+            popSound.play();
+            showNextImage();
+            if (tapCount % 10 === 0) {
+                sendScore(tapCount);
+            }
+        }
+
+        function sendScore(score) {
+            fetch('/send-score/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ score: score })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Score sent successfully:', data);
+            })
+            .catch((error) => {
+                console.error('Error sending score:', error);
+            });
+        }
+
+        images[currentImageIndex].classList.add('active');
+        images.forEach(img => {
+            img.addEventListener('click', handleTap);
+        });
+
+        const apiUrl = '/leaderboard-proxy/';
+
+        const countryNames = {
+            "AF": "Afghanistan",
+            "AX": "Aland Islands",
+            "AL": "Albania",
+            "DZ": "Algeria",
+            "AS": "American Samoa",
+            "AD": "Andorra",
+            "AO": "Angola",
+            "AI": "Anguilla",
+            "AQ": "Antarctica",
+            "AG": "Antigua And Barbuda",
+            "AR": "Argentina",
+            "AM": "Armenia",
+            "AW": "Aruba",
+            "AU": "Australia",
+            "AT": "Austria",
+            "AZ": "Azerbaijan",
+            "BS": "Bahamas",
+            "BH": "Bahrain",
+            "BD": "Bangladesh",
+            "BB": "Barbados",
+            "BY": "Belarus",
+            "BE": "Belgium",
+            "BZ": "Belize",
+            "BJ": "Benin",
+            "BM": "Bermuda",
+            "BT": "Bhutan",
+            "BO": "Bolivia",
+            "BA": "Bosnia And Herzegovina",
+            "BW": "Botswana",
+            "BV": "Bouvet Island",
+            "BR": "Brazil",
+            "IO": "British Indian Ocean Territory",
+            "BN": "Brunei Darussalam",
+            "BG": "Bulgaria",
+            "BF": "Burkina Faso",
+            "BI": "Burundi",
+            "KH": "Cambodia",
+            "CM": "Cameroon",
+            "CA": "Canada",
+            "CV": "Cape Verde",
+            "KY": "Cayman Islands",
+            "CF": "Central African Republic",
+            "TD": "Chad",
+            "CL": "Chile",
+            "CN": "China",
+            "CX": "Christmas Island",
+            "CC": "Cocos (Keeling) Islands",
+            "CO": "Colombia",
+            "KM": "Comoros",
+            "CG": "Congo",
+            "CD": "Congo, Democratic Republic",
+            "CK": "Cook Islands",
+            "CR": "Costa Rica",
+            "CI": "Cote D'Ivoire",
+            "HR": "Croatia",
+            "CU": "Cuba",
+            "CY": "Cyprus",
+            "CZ": "Czech Republic",
+            "DK": "Denmark",
+            "DJ": "Djibouti",
+            "DM": "Dominica",
+            "DO": "Dominican Republic",
+            "EC": "Ecuador",
+            "EG": "Egypt",
+            "SV": "El Salvador",
+            "GQ": "Equatorial Guinea",
+            "ER": "Eritrea",
+            "EE": "Estonia",
+            "ET": "Ethiopia",
+            "FK": "Falkland Islands (Malvinas)",
+            "FO": "Faroe Islands",
+            "FJ": "Fiji",
+            "FI": "Finland",
+            "FR": "France",
+            "GF": "French Guiana",
+            "PF": "French Polynesia",
+            "TF": "French Southern Territories",
+            "GA": "Gabon",
+            "GM": "Gambia",
+            "GE": "Georgia",
+            "DE": "Germany",
+            "GH": "Ghana",
+            "GI": "Gibraltar",
+            "GR": "Greece",
+            "GL": "Greenland",
+            "GD": "Grenada",
+            "GP": "Guadeloupe",
+            "GU": "Guam",
+            "GT": "Guatemala",
+            "GG": "Guernsey",
+            "GN": "Guinea",
+            "GW": "Guinea-Bissau",
+            "GY": "Guyana",
+            "HT": "Haiti",
+            "HM": "Heard Island & Mcdonald Islands",
+            "VA": "Holy See (Vatican City State)",
+            "HN": "Honduras",
+            "HK": "Hong Kong",
+            "HU": "Hungary",
+            "IS": "Iceland",
+            "IN": "India",
+            "ID": "Indonesia",
+            "IR": "Iran, Islamic Republic Of",
+            "IQ": "Iraq",
+            "IE": "Ireland",
+            "IM": "Isle Of Man",
+            "IL": "Israel",
+            "IT": "Italy",
+            "JM": "Jamaica",
+            "JP": "Japan",
+            "JE": "Jersey",
+            "JO": "Jordan",
+            "KZ": "Kazakhstan",
+            "KE": "Kenya",
+            "KI": "Kiribati",
+            "KR": "Korea",
+            "KP": "North Korea",
+            "KW": "Kuwait",
+            "KG": "Kyrgyzstan",
+            "LA": "Lao People's Democratic Republic",
+            "LV": "Latvia",
+            "LB": "Lebanon",
+            "LS": "Lesotho",
+            "LR": "Liberia",
+            "LY": "Libyan Arab Jamahiriya",
+            "LI": "Liechtenstein",
+            "LT": "Lithuania",
+            "LU": "Luxembourg",
+            "MO": "Macao",
+            "MK": "Macedonia",
+            "MG": "Madagascar",
+            "MW": "Malawi",
+            "MY": "Malaysia",
+            "MV": "Maldives",
+            "ML": "Mali",
+            "MT": "Malta",
+            "MH": "Marshall Islands",
+            "MQ": "Martinique",
+            "MR": "Mauritania",
+            "MU": "Mauritius",
+            "YT": "Mayotte",
+            "MX": "Mexico",
+            "FM": "Micronesia, Federated States Of",
+            "MD": "Moldova",
+            "MC": "Monaco",
+            "MN": "Mongolia",
+            "ME": "Montenegro",
+            "MS": "Montserrat",
+            "MA": "Morocco",
+            "MZ": "Mozambique",
+            "MM": "Myanmar",
+            "NA": "Namibia",
+            "NR": "Nauru",
+            "NP": "Nepal",
+            "NL": "Netherlands",
+            "AN": "Netherlands Antilles",
+            "NC": "New Caledonia",
+            "NZ": "New Zealand",
+            "NI": "Nicaragua",
+            "NE": "Niger",
+            "NG": "Nigeria",
+            "NU": "Niue",
+            "NF": "Norfolk Island",
+            "MP": "Northern Mariana Islands",
+            "NO": "Norway",
+            "OM": "Oman",
+            "PK": "Pakistan",
+            "PW": "Palau",
+            "PS": "Palestinian Territory, Occupied",
+            "PA": "Panama",
+            "PG": "Papua New Guinea",
+            "PY": "Paraguay",
+            "PE": "Peru",
+            "PH": "Philippines",
+            "PN": "Pitcairn",
+            "PL": "Poland",
+            "PT": "Portugal",
+            "PR": "Puerto Rico",
+            "QA": "Qatar",
+            "RE": "Reunion",
+            "RO": "Romania",
+            "RU": "Russian Federation",
+            "RW": "Rwanda",
+            "BL": "Saint Barthelemy",
+            "SH": "Saint Helena",
+            "KN": "Saint Kitts And Nevis",
+            "LC": "Saint Lucia",
+            "MF": "Saint Martin",
+            "PM": "Saint Pierre And Miquelon",
+            "VC": "Saint Vincent And Grenadines",
+            "WS": "Samoa",
+            "SM": "San Marino",
+            "ST": "Sao Tome And Principe",
+            "SA": "Saudi Arabia",
+            "SN": "Senegal",
+            "RS": "Serbia",
+            "SC": "Seychelles",
+            "SL": "Sierra Leone",
+            "SG": "Singapore",
+            "SK": "Slovakia",
+            "SI": "Slovenia",
+            "SB": "Solomon Islands",
+            "SO": "Somalia",
+            "ZA": "South Africa",
+            "GS": "South Georgia And Sandwich Isl.",
+            "ES": "Spain",
+            "LK": "Sri Lanka",
+            "SD": "Sudan",
+            "SR": "Suriname",
+            "SJ": "Svalbard And Jan Mayen",
+            "SZ": "Swaziland",
+            "SE": "Sweden",
+            "CH": "Switzerland",
+            "SY": "Syrian Arab Republic",
+            "TW": "Taiwan",
+            "TJ": "Tajikistan",
+            "TZ": "Tanzania",
+            "TH": "Thailand",
+            "TL": "Timor-Leste",
+            "TG": "Togo",
+            "TK": "Tokelau",
+            "TO": "Tonga",
+            "TT": "Trinidad And Tobago",
+            "TN": "Tunisia",
+            "TR": "Turkey",
+            "TM": "Turkmenistan",
+            "TC": "Turks And Caicos Islands",
+            "TV": "Tuvalu",
+            "UG": "Uganda",
+            "UA": "Ukraine",
+            "AE": "United Arab Emirates",
+            "GB": "United Kingdom",
+            "US": "United States",
+            "UM": "United States Outlying Islands",
+            "UY": "Uruguay",
+            "UZ": "Uzbekistan",
+            "VU": "Vanuatu",
+            "VE": "Venezuela",
+            "VN": "Vietnam",
+            "VG": "Virgin Islands, British",
+            "VI": "Virgin Islands, U.S.",
+            "WF": "Wallis And Futuna",
+            "EH": "Western Sahara",
+            "YE": "Yemen",
+            "ZM": "Zambia",
+            "ZW": "Zimbabwe"
+        };
+
+        function updateLeaderboard() {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const leaderboardList = document.getElementById("leaderboard-list");
+                    leaderboardList.innerHTML = '';
+
+                    Object.entries(data).forEach(([countryCode, score], index) => {
+                        const countryName = countryNames[countryCode] || countryCode;
+                        const flagUrl = `https://flagsapi.com/${countryCode}/shiny/64.png`;
+
+                        const entryElement = document.createElement("div");
+                        entryElement.classList.add("leaderboard-entry");
+                        entryElement.dataset.countryCode = countryCode;
+
+                        entryElement.innerHTML = `
+                            <div class="entry-left">
+                                <span class="rank">${index + 1}</span>
+                                <img src="${flagUrl}" alt="${countryName} flag" class="country-flag">
+                                <span class="country-name">${countryName}</span>
+                            </div>
+                            <div class="entry-score">${score}</div>
+                        `;
+
+                        entryElement.addEventListener('click', () => {
+                            selectedCountryCode = countryCode;
+                            updateLeaderboard();
+                        });
+
+                        leaderboardList.appendChild(entryElement);
+                    });
+
+                    if (selectedCountryCode) {
+                        const selectedEntry = leaderboardList.querySelector(`[data-country-code="${selectedCountryCode}"]`);
+                        if (selectedEntry) {
+                            leaderboardList.prepend(selectedEntry);
+                        }
+                    }
+                });
+        }
+
+        updateLeaderboard();
+        setInterval(updateLeaderboard, 5000);
+
+        const leaderboard = document.querySelector('.leaderboard');
+        const leaderboardHeader = document.querySelector('.leaderboard-header');
+        const backdrop = document.querySelector('.backdrop');
+
+        leaderboardHeader.addEventListener('click', () => {
+            leaderboard.classList.toggle('expanded');
+            backdrop.classList.toggle('active');
+        });
+
+        backdrop.addEventListener('click', () => {
+            leaderboard.classList.remove('expanded');
+            backdrop.classList.remove('active');
+        });
+    </script>
+</body>
+</html>
